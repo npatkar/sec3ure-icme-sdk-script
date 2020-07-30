@@ -3,6 +3,7 @@ package com.genkeys;
 import io.github.thecarisma.Konfiger;
 import io.github.thecarisma.KonfigerStream;
 import okhttp3.*;
+import org.apache.commons.io.FileUtils;
 
 import javax.net.ssl.*;
 import java.io.*;
@@ -44,6 +45,17 @@ public class Main {
         signCSR();
         generateP12ForBrowser();
         uploadCertificate();
+        copyP12Files();
+    }
+
+    private void copyP12Files() throws IOException {
+        if (new File(config.P12DestinationPath).exists()) {
+            FileUtils.copyFile(new File(config.OutputFolder + config.P12OutputFile), new File(config.P12DestinationPath + config.P12OutputFile));
+            System.out.println();
+            System.out.println(config.P12OutputFile+ " File Copied succesfully ."+config.P12DestinationPath + config.P12OutputFile);
+        }else{
+            System.out.println("Invalid Destination path to copy."+config.P12OutputFile);
+        }
     }
 
     private void uploadCertificate() throws IOException, KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException, KeyManagementException, CertificateException {
