@@ -51,10 +51,10 @@ public class Main {
     private void copyP12Files() throws IOException {
         System.out.println();
         System.out.println("=========================================================");
-        System.out.println("P12 file Copy to Destination "+config.P12DestinationPath);
-        if (new File(config.P12DestinationPath).exists()) {
-            FileUtils.copyFile(new File(config.OutputFolder + config.P12OutputFile), new File(config.P12DestinationPath + config.P12OutputFile));
-            System.out.println(config.P12OutputFile+ " File Copied succesfully ."+config.P12DestinationPath + config.P12OutputFile);
+        System.out.println("P12 file Copy to Destination "+config.SDKRepoPath);
+        if (new File(config.SDKRepoPath).exists()) {
+            FileUtils.copyFile(new File(config.OutputFolder + config.P12OutputFile), new File(config.SDKRepoPath + config.P12OutputFile));
+            System.out.println(config.P12OutputFile+ " File Copied succesfully ."+config.SDKRepoPath + config.P12OutputFile);
         }else{
             System.out.println("Destination path is not available to copy."+config.P12OutputFile);
         }

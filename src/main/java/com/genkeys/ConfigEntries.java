@@ -46,5 +46,5 @@ public class ConfigEntries {
     String tier;
     String wso2ServerUserName;
     String wso2ServerPassword;
-    String P12DestinationPath;
+    String SDKRepoPath;
 }
