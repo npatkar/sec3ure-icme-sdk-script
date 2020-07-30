@@ -49,16 +49,22 @@ public class Main {
     }
 
     private void copyP12Files() throws IOException {
+        System.out.println();
+        System.out.println("=========================================================");
+        System.out.println("P12 file Copy to Destination "+config.P12DestinationPath);
         if (new File(config.P12DestinationPath).exists()) {
             FileUtils.copyFile(new File(config.OutputFolder + config.P12OutputFile), new File(config.P12DestinationPath + config.P12OutputFile));
-            System.out.println();
             System.out.println(config.P12OutputFile+ " File Copied succesfully ."+config.P12DestinationPath + config.P12OutputFile);
         }else{
-            System.out.println("Invalid Destination path to copy."+config.P12OutputFile);
+            System.out.println("Destination path is not available to copy."+config.P12OutputFile);
         }
+        System.out.println("=========================================================");
     }
 
-    private void uploadCertificate() throws IOException, KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException, KeyManagementException, CertificateException {
+    private void uploadCertificate() {
+        System.out.println();
+        System.out.println("=========================================================");
+        System.out.println("Certifcate Upload Process started ");
         OkHttpClient client = getUnsafeOkHttpClient();
         MediaType mediaType = MediaType.parse("text/plain");
         String webserviceURL = config.wso2UploadUrl.replaceAll("\\{apiId}", config.apiId);
@@ -79,13 +85,14 @@ public class Main {
         try {
             Response response = client.newCall(request).execute();
             if (response.code() == 201) {
-                System.out.println("\n Certificate Upload Sucessfully .. \n" + response);
+                System.out.println(" Certificate Upload Sucessfully .. " + response);
             } else {
-                System.out.println("\n Certifcate Upload Failed :: \n" + response);
+                System.out.println(" Certifcate Upload Failed :: " + response);
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
+        System.out.println("=========================================================");
     }
 
     // openssl genrsa -out rootCA.key 2048
