@@ -7,10 +7,9 @@ import org.apache.commons.io.FileUtils;
 
 import javax.net.ssl.*;
 import java.io.*;
-import java.security.KeyManagementException;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.UnrecoverableKeyException;
+import java.net.URISyntaxException;
+import java.net.URLDecoder;
+import java.security.*;
 import java.security.cert.CertificateException;
 
 /**
@@ -22,7 +21,7 @@ public class Main {
     ConfigEntries config = new ConfigEntries();
     File outputFolder;
 
-    public Main(File inputFile) throws Exception {
+    public Main(File inputFile, String sdkJarFileName) throws Exception {
         if (!inputFile.exists()) {
             throw new FileNotFoundException("The file '" + inputFile.getAbsolutePath() + "' does not exist");
         }
@@ -46,17 +45,54 @@ public class Main {
         generateP12ForBrowser();
         uploadCertificate();
         copyP12Files();
+        appendP12InJar(sdkJarFileName);
+    }
+    public static String getJarContainingFolder(Class aclass) throws Exception {
+        CodeSource codeSource = aclass.getProtectionDomain().getCodeSource();
+        File jarFile;
+        if (codeSource.getLocation() != null) {
+            jarFile = new File(codeSource.getLocation().toURI());
+        }
+        else {
+            String path = aclass.getResource(aclass.getSimpleName() + ".class").getPath();
+            String jarFilePath = path.substring(path.indexOf(":") + 1, path.indexOf("!"));
+            jarFilePath = URLDecoder.decode(jarFilePath, "UTF-8");
+            jarFile = new File(jarFilePath);
+        }
+        return jarFile.getParentFile().getAbsolutePath();
+    }
+    private void appendP12InJar(String sdkJarFileName) throws Exception {
+        System.out.println("=========================================================");
+        String path = getJarContainingFolder(Main.class);
+        System.out.println(path);
+        StringBuilder sb = new StringBuilder();
+        for (String s : path.split("\\\\")) {
+            if (s.equals("target")) {
+            }else if( s.equals("classes")) {
+            } else {
+                sb.append(s + "/");
+            }
+        }
+        FileUtils.copyFile(new File(config.OutputFolder + config.P12OutputFile), new File(sb.toString() + config.P12OutputFile));
+        Process ps = Runtime.getRuntime().exec(new String[]{"jar", "uf", sdkJarFileName, config.P12OutputFile});
+        ps.waitFor();
+        java.io.InputStream is = ps.getInputStream();
+        byte b[] = new byte[is.available()];
+        is.read(b, 0, b.length);
+        FileUtils.forceDelete(new File(sb.toString() + config.P12OutputFile));
+        System.out.println("P12 Certifcate added succesfully in "+sdkJarFileName);
+        System.out.println("=========================================================");
     }
 
     private void copyP12Files() throws IOException {
         System.out.println();
         System.out.println("=========================================================");
-        System.out.println("P12 file Copy to Destination "+config.SDKRepoPath);
+        System.out.println("P12 file Copy to Destination " + config.SDKRepoPath);
         if (new File(config.SDKRepoPath).exists()) {
             FileUtils.copyFile(new File(config.OutputFolder + config.P12OutputFile), new File(config.SDKRepoPath + config.P12OutputFile));
-            System.out.println(config.P12OutputFile+ " File Copied succesfully ."+config.SDKRepoPath + config.P12OutputFile);
-        }else{
-            System.out.println("Destination path is not available to copy."+config.P12OutputFile);
+            System.out.println(config.P12OutputFile + " File Copied succesfully ." + config.SDKRepoPath + config.P12OutputFile);
+        } else {
+            System.out.println("Destination path is not available to copy." + config.P12OutputFile);
         }
         System.out.println("=========================================================");
     }
@@ -337,10 +373,10 @@ public class Main {
     }
 
     public static void main(String[] args) throws Exception {
-        if (args.length < 1) {
-            throw new Exception("Invalid length of argument simply specify the config file path\ngenkeys input.conf");
+        if (args.length < 2) {
+            throw new Exception("Invalid length of argument simply specify the config file path\ngenkeys input.conf  jarfilename to append");
         }
-        new Main(new File(args[0]));
+        new Main(new File(args[0]), args[1]);
     }
 
     private OkHttpClient getUnsafeOkHttpClient() {
