@@ -1,4 +1,4 @@
-package com.genkeys;
+package com.intellicentrics.icme.sdk.script;
 
 import io.github.thecarisma.Konfiger;
 import io.github.thecarisma.KonfigerStream;
@@ -12,16 +12,13 @@ import java.net.URLDecoder;
 import java.security.*;
 import java.security.cert.CertificateException;
 
-/**
- * @author Arpit Khatri
- * @date 25-Jul-20 03:55 PM
- */
-public class Main {
+
+public class MainScript {
 
     ConfigEntries config = new ConfigEntries();
     File outputFolder;
 
-    public Main(File inputFile, String sdkJarFileName) throws Exception {
+    public MainScript(File inputFile, String sdkJarFileName) throws Exception {
         if (!inputFile.exists()) {
             throw new FileNotFoundException("The file '" + inputFile.getAbsolutePath() + "' does not exist");
         }
@@ -63,7 +60,7 @@ public class Main {
     }
     private void appendP12InJar(String sdkJarFileName) throws Exception {
         System.out.println("=========================================================");
-        String path = getJarContainingFolder(Main.class);
+        String path = getJarContainingFolder(MainScript.class);
         System.out.println(path);
         StringBuilder sb = new StringBuilder();
         for (String s : path.split("\\\\")) {
@@ -376,7 +373,7 @@ public class Main {
         if (args.length < 2) {
             throw new Exception("Invalid length of argument simply specify the config file path\ngenkeys input.conf  jarfilename to append");
         }
-        new Main(new File(args[0]), args[1]);
+        new MainScript(new File(args[0]), args[1]);
     }
 
     private OkHttpClient getUnsafeOkHttpClient() {
