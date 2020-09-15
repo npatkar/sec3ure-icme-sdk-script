@@ -1,0 +1,6 @@
+{
+  "name": "vcloud",
+  "p12file": "clientcrt.p12",
+  "p12password": "123abc",
+  "region":"EUROPE"
+}

@@ -3,6 +3,7 @@ package com.intellicentrics.icme.sdk.script.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.intellicentrics.icme.sdk.script.constants.UtilityConfConstants;
 import com.intellicentrics.icme.sdk.script.model.ParentMapping;
+import com.intellicentrics.icme.sdk.script.model.VendorSetting;
 import com.intellicentrics.icme.sdk.script.service.CertificateManagementService;
 import com.intellicentrics.icme.sdk.script.service.Wso2ApiService;
 import org.slf4j.Logger;
@@ -25,16 +26,21 @@ public class MainController {
     @Autowired
     Wso2ApiService wso2ApiService;
 
-    public void performOpertion(File inputFile, String sdkJarFileName) throws Exception {
+    public void performOpertion(File inputFile,File settingFile, String sdkJarFileName) throws Exception {
         ObjectMapper objectMapper = new ObjectMapper();
         if (!inputFile.exists()) {
             throw new FileNotFoundException("The file '" + inputFile.getAbsolutePath() + "' does not exist");
         }
+        if (!settingFile.exists()) {
+            throw new FileNotFoundException("The file '" + settingFile.getAbsolutePath() + "' does not exist");
+        }
         ParentMapping configBean = objectMapper.readValue(inputFile, ParentMapping.class);
+        VendorSetting setting = objectMapper.readValue(settingFile, VendorSetting.class);
 
         configBean.setConfigFilePath(inputFile.getAbsolutePath());
 
         configBean.setOutputFolder(new File(UtilityConfConstants.OutputFolder));
+
         if (!configBean.getOutputFolder().exists() || !configBean.getOutputFolder().isDirectory()) {
             if (!configBean.getOutputFolder().mkdirs()) {
                 throw new FileNotFoundException("The output folder " + configBean.getOutputFolder().getAbsolutePath() + " does not exist");
@@ -43,14 +49,15 @@ public class MainController {
 
         certificateManagementService.createRootCA(configBean);
         certificateManagementService.makeCertTrusted(configBean);
-        certificateManagementService.createKeysAndCSR(configBean);
+        certificateManagementService.createKeysAndCSR(configBean,setting);
         certificateManagementService.createDemoCAFolderAndFiles(configBean);
         certificateManagementService.signCSR(configBean);
-        certificateManagementService.generateP12ForBrowser(configBean);
+        certificateManagementService.generateP12ForBrowser(configBean,setting);
         List<String> apiIdList = wso2ApiService.getAPIId(configBean);
         apiIdList.forEach(s -> {
             wso2ApiService.uploadCertificate(s, configBean);
         });
-        certificateManagementService.appendP12InJar(sdkJarFileName, configBean);
+        certificateManagementService.appendP12InJar(sdkJarFileName, configBean, setting);
+        certificateManagementService.addVendoreSetting(sdkJarFileName,settingFile);
     }
 }

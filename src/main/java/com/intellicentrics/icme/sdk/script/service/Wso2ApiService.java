@@ -37,6 +37,7 @@ public class Wso2ApiService {
                 Response response = client.newCall(request).execute();
                 if (response != null && response.code() == 200) {
                     String jsonStringResposne = response.body().string();
+                    System.out.println("getAPIId response: "+jsonStringResposne);
                     Map<String, Object> map = mapper.readValue(jsonStringResposne, Map.class);
                     if (map != null) {
                         List<Map<String, String>> listMap = (ArrayList) map.get("list");
@@ -65,6 +66,7 @@ public class Wso2ApiService {
                                 new File(certPath)))
                 .addFormDataPart("tier", configBean.getWso2Api().getTier())
                 .build();
+        System.out.println("body: "+body);
         Request request = new Request.Builder()
                 .url(webserviceURL)
                 .method("POST", body)

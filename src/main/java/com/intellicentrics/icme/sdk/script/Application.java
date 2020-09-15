@@ -26,10 +26,10 @@ public class Application implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments argss) throws Exception {
-        if (argss.getNonOptionArgs().size() < 2) {
-            throw new Exception("Invalid length of argument simply specify the config file path\ngenkeys input.conf  jarfilename to append");
+        if (argss.getNonOptionArgs().size() < 3) {
+            throw new Exception("Invalid length of argument simply specify the config file path\ngenkeys input.json vendor-settings.json  jarfilename to append");
         }
-        mainController.performOpertion(new File(argss.getNonOptionArgs().get(0)), argss.getNonOptionArgs().get(1));
+        mainController.performOpertion(new File(argss.getNonOptionArgs().get(0)), new File(argss.getNonOptionArgs().get(1)),argss.getNonOptionArgs().get(2));
         System.exit(-1);
     }
 }

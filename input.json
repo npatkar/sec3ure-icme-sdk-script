@@ -1,30 +1,27 @@
 {
-	"wso2" : {
-		"url" : "https://localhost:9443/api/am/publisher/v1/apis/{apiId}/client-certificates",
-		"tier" : "Gold",
-		"adminUser" : "admin",
-		"adminPassword" : "admin",
-		"apis" : [
+	"wso2": {
+		"url": "https://localhost:9443/api/am/publisher/v1/apis/{apiId}/client-certificates",
+		"tier": "Gold",
+		"adminUser": "admin",
+		"adminPassword": "admin",
+		"apis": [
 			{
-				"name" : "CertTest",
-				"version" : "1.0.0"
-			},
-			{
-				"name" : "PizzaShackAPI",
-				"version" : "1.0.0"
+				"name": "Certificate",
+				"version": "1.0.0"
 			}
 		]
 	},
-	"keystore" : {
-		"alias" : "clientcrt",
-		"startDate" : "200716080000Z",
-		"endDate" : "300715090000Z",
-		"commonName" : "vcolud.com",
-		"organizationUnit" : "QA",
-		"organization" : "vcolud",
-		"city" : "Lewes",
-		"state" : "DE",
-		"country" : "UK"
+	"keystore": {
+		"alias": "clientcrt",
+		"startDate": "200716080000Z",
+		"endDate": "300715090000Z",
+		"commonName": "vcolud.com",
+		"organizationUnit": "QA",
+		"organization": "vcolud",
+		"city": "Lewes",
+		"state": "DE",
+		"country": "UK"
 	},
-	"openSslPath" : "C:/Program Files/Git/mingw64/bin/openssl.exe"
+	"openSslPath": "C:/Program Files/OpenSSL-Win64/bin/openssl.exe",
+	"outputFolder": "generated/files"
 }

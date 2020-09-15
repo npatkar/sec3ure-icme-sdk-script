@@ -3,6 +3,7 @@ package com.intellicentrics.icme.sdk.script.service;
 import com.intellicentrics.icme.sdk.script.Application;
 import com.intellicentrics.icme.sdk.script.constants.UtilityConfConstants;
 import com.intellicentrics.icme.sdk.script.model.ParentMapping;
+import com.intellicentrics.icme.sdk.script.model.VendorSetting;
 import com.intellicentrics.icme.sdk.script.utility.CommonUtil;
 import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -65,7 +66,7 @@ public class CertificateManagementService {
 
     // keytool -genkey -v -alias clientcrt -keyalg RSA -validity 3650 -keystore clientcrt.jks -storepass clientpwd -keypass clientpwd
     // keytool -certreq -alias clientcrt -file clientcrt.csr -keystore clientcrt.jks -storepass clientpwd
-    public void createKeysAndCSR(ParentMapping configBean) throws Exception {
+    public void createKeysAndCSR(ParentMapping configBean, VendorSetting setting) throws Exception {
 
         String command;
         String keyToolPath;
@@ -84,12 +85,12 @@ public class CertificateManagementService {
                 }
             }
             command = String.format("%s -genkey -v -alias %s -keyalg RSA -validity %d -keystore %s -storepass %s -keypass %s %s",
-                    keyToolPath, configBean.getKeystoreBean().getAlias(), UtilityConfConstants.ValidityPeriod, CommonUtil.concatWithOutputFolder(UtilityConfConstants.KeyStoreOutputFile, configBean), UtilityConfConstants.StorePass, UtilityConfConstants.KeyPass,
+                    keyToolPath, configBean.getKeystoreBean().getAlias(), UtilityConfConstants.ValidityPeriod, CommonUtil.concatWithOutputFolder(UtilityConfConstants.KeyStoreOutputFile, configBean), setting.getP12password(), setting.getP12password(),
                     UtilityConfConstants.GenerateKeyStoreExtraArguments);
             CommonUtil.executeCommand(command, new String[]{
                     configBean.getKeystoreBean().getCommonName(),
                     configBean.getKeystoreBean().getOrganizationUnit(),
-                    configBean.getKeystoreBean().getOrganization(),
+                    setting.getName(),
                     configBean.getKeystoreBean().getCity(),
                     configBean.getKeystoreBean().getState(),
                     configBean.getKeystoreBean().getCountry(),
@@ -109,7 +110,7 @@ public class CertificateManagementService {
             }
             command = String.format("%s -certreq -alias %s -file %s -keystore %s -storepass %s %s",
                     keyToolPath, configBean.getKeystoreBean().getAlias(), CommonUtil.concatWithOutputFolder(UtilityConfConstants.KeyStoreCSROutputFile, configBean),
-                    CommonUtil.concatWithOutputFolder(UtilityConfConstants.KeyStoreOutputFile, configBean), UtilityConfConstants.StorePass, UtilityConfConstants.GenerateCSRExtraArguments);
+                    CommonUtil.concatWithOutputFolder(UtilityConfConstants.KeyStoreOutputFile, configBean), setting.getP12password(), UtilityConfConstants.GenerateCSRExtraArguments);
             CommonUtil.executeCommand(command, new String[]{}, "./");
         }
     }
@@ -181,7 +182,7 @@ public class CertificateManagementService {
         }
     }
 
-    public void generateP12ForBrowser(ParentMapping configBean) throws Exception {
+    public void generateP12ForBrowser(ParentMapping configBean, VendorSetting setting) throws Exception {
         String command;
         String keyToolPath;
 
@@ -189,23 +190,23 @@ public class CertificateManagementService {
                 new File(UtilityConfConstants.KeyToolPath).exists())
                 ? UtilityConfConstants.KeyToolPath
                 : "keytool";
-        if (!new File(CommonUtil.concatWithOutputFolder(UtilityConfConstants.P12OutputFile, configBean)).exists() ||
-                (new File(CommonUtil.concatWithOutputFolder(UtilityConfConstants.P12OutputFile, configBean)).exists() &&
+        if (!new File(CommonUtil.concatWithOutputFolder(setting.getP12file(), configBean)).exists() ||
+                (new File(CommonUtil.concatWithOutputFolder(setting.getP12file(), configBean)).exists() &&
                         UtilityConfConstants.AlwaysGenerateSignedCSR)) {
 
-            CommonUtil.printHeader(String.format("* Generating the P12 file %s", CommonUtil.concatWithOutputFolder(UtilityConfConstants.P12OutputFile, configBean)));
-            if (new File(CommonUtil.concatWithOutputFolder(UtilityConfConstants.P12OutputFile, configBean)).exists()) {
-                if (!new File(CommonUtil.concatWithOutputFolder(UtilityConfConstants.P12OutputFile, configBean)).delete()) {
-                    throw new Exception("Unable to delete the old store csr file: " + CommonUtil.concatWithOutputFolder(UtilityConfConstants.P12OutputFile, configBean));
+            CommonUtil.printHeader(String.format("* Generating the P12 file %s", CommonUtil.concatWithOutputFolder(setting.getP12file(), configBean)));
+            if (new File(CommonUtil.concatWithOutputFolder(setting.getP12file(), configBean)).exists()) {
+                if (!new File(CommonUtil.concatWithOutputFolder(setting.getP12file(), configBean)).delete()) {
+                    throw new Exception("Unable to delete the old store csr file: " + CommonUtil.concatWithOutputFolder(setting.getP12file(), configBean));
                 }
             }
             command = String.format("%s -importkeystore -srckeystore %s -destkeystore %s -srcstoretype JKS -deststoretype PKCS12 -srcstorepass %s -deststorepass %s %s",
-                    keyToolPath, UtilityConfConstants.KeyStoreOutputFile, UtilityConfConstants.P12OutputFile, UtilityConfConstants.StorePass, UtilityConfConstants.P12DestStorePass, UtilityConfConstants.GenerateP12ExtraArguments);
+                    keyToolPath, UtilityConfConstants.KeyStoreOutputFile, setting.getP12file(), setting.getP12password(), setting.getP12password(), UtilityConfConstants.GenerateP12ExtraArguments);
             CommonUtil.executeCommand(command, new String[]{}, UtilityConfConstants.OutputFolder);
         }
     }
 
-    public void appendP12InJar(String sdkJarFileName, ParentMapping configBean) throws Exception {
+    public void appendP12InJar(String sdkJarFileName, ParentMapping configBean, VendorSetting setting) throws Exception {
         System.out.println("=========================================================");
         StringBuilder sb = new StringBuilder();
         String path=getJarContainingFolder(Application.class);
@@ -217,17 +218,36 @@ public class CertificateManagementService {
             }
         }
         FileUtils.copyFile(new
-                File(UtilityConfConstants.OutputFolder + UtilityConfConstants.P12OutputFile), new
-                File(sb.toString() + UtilityConfConstants.P12OutputFile));
-        Process ps = Runtime.getRuntime().exec(new String[]{"jar", "uf", sdkJarFileName, UtilityConfConstants.P12OutputFile});
+                File(UtilityConfConstants.OutputFolder + setting.getP12file()), new
+                File(sb.toString() + setting.getP12file()));
+        Process ps = Runtime.getRuntime().exec(new String[]{"jar", "uf", sdkJarFileName, setting.getP12file()});
         ps.waitFor();
         java.io.InputStream is = ps.getInputStream();
         byte b[] = new byte[is.available()];
         is.read(b, 0, b.length);
         FileUtils.forceDelete(new
 
-                File(sb.toString() + UtilityConfConstants.P12OutputFile));
+                File(sb.toString() + setting.getP12file()));
         System.out.println("P12 Certifcate added succesfully in " + sdkJarFileName);
+        System.out.println("=========================================================");
+    }
+    public void addVendoreSetting(String sdkJarFileName, File vendorSetting) throws Exception {
+        System.out.println("=========================================================");
+        StringBuilder sb = new StringBuilder();
+        String path=getJarContainingFolder(Application.class);
+        for (String s : path.split("\\\\")) {
+            if (s.equals("target")) {
+            } else if (s.equals("classes")) {
+            } else {
+                sb.append(s + "/");
+            }
+        }
+        Process ps = Runtime.getRuntime().exec(new String[]{"jar", "uf", sdkJarFileName, UtilityConfConstants.VendorSettingOutputFile});
+        ps.waitFor();
+        java.io.InputStream is = ps.getInputStream();
+        byte b[] = new byte[is.available()];
+        is.read(b, 0, b.length);
+        System.out.println("Vendor setting file added successfully in " + sdkJarFileName);
         System.out.println("=========================================================");
     }
 

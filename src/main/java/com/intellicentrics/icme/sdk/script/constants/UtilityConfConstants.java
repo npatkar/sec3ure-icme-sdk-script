@@ -30,6 +30,7 @@ public final class UtilityConfConstants {
     public static final String StorePass = "clientpwd";
     public static final String P12DestStorePass = "clientpwd";
     public static final String P12OutputFile = "clientcrt.p12";
+    public static final String VendorSettingOutputFile = "vendor-settings.json";
 
 
 }
